@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fpl-manager-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - fpl-network
+
+  prefect:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fpl-prefect-worker
+    command: python -c "from prefect.flow import ml_pipeline_flow; ml_pipeline_flow()"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PREFECT_API_URL=http://localhost:4200/api
+    depends_on:
+      - fastapi
+    restart: unless-stopped
+    networks:
+      - fpl-network
+
+  # Optional: Prefect Server (for workflow monitoring)
+  # prefect-server:
+  #   image: prefecthq/prefect:latest
+  #   container_name: fpl-prefect-server
+  #   ports:
+  #     - "4200:4200"
+  #   environment:
+  #     - PREFECT_API_URL=http://localhost:4200/api
+  #   networks:
+  #     - fpl-network
+
+networks:
+  fpl-network:
+    driver: bridge
+
+volumes:
+  data:
+  models:
+  logs:
+
