@@ -254,3 +254,22 @@ async def optimize_endpoint(request: SquadOptimizationRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Helpful GET endpoint so visiting the path in a browser or via Swagger (GET)
+# returns instructions instead of a 405 Method Not Allowed error.
+@app.get("/optimize-squad")
+async def optimize_squad_info():
+    """Return usage instructions for the POST `/optimize-squad` endpoint."""
+    example_payload = {
+        "budget": 100.0,
+        "constraints": {},
+        "max_per_club": 3,
+        "use_hill_climbing": False,
+        "model_name": "ridge",
+    }
+    return {
+        "detail": "This endpoint accepts POST with JSON body. Use POST /optimize-squad.",
+        "example_request": example_payload,
+        "notes": "You can invoke the real optimizer via POST. In Swagger UI expand POST /optimize-squad and use Execute.",
+    }
