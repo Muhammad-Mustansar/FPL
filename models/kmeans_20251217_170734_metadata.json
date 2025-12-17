@@ -1,0 +1,9 @@
+{
+  "metrics": {
+    "model_name": "KMeans",
+    "n_clusters": 3,
+    "silhouette_score": 0.185706840804143,
+    "davies_bouldin_score": 1.365240808198531,
+    "calinski_harabasz_score": 211.4827696757657,
+    "cluster_sizes": {
+      

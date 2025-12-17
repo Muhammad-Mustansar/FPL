@@ -41,13 +41,13 @@ RUN mkdir -p data models logs
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
-# Expose FastAPI port
-EXPOSE 8000
+# Expose the port (Note: This is mostly for documentation in cloud builds)
+EXPOSE 8501
 
-# Health check
+# Health check updated to look at the dynamic port (or default 8501)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8501}/health || exit 1
 
-# Run FastAPI application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+# Run FastAPI application using the shell form to allow variable expansion
+# We use ${PORT:-8501} to use the cloud's port, or default to 8501 if locally run
+CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8501}"

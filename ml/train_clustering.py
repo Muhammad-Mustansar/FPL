@@ -89,9 +89,9 @@ class ClusteringTrainer:
         davies_bouldin = davies_bouldin_score(X_processed, cluster_labels)
         calinski_harabasz = calinski_harabasz_score(X_processed, cluster_labels)
         
-        # Cluster sizes
+        # Cluster sizes - FIXED: Convert numpy types to standard python types
         unique, counts = np.unique(cluster_labels, return_counts=True)
-        cluster_sizes = dict(zip(unique, counts))
+        cluster_sizes = {int(k): int(v) for k, v in zip(unique, counts)}
         
         metrics = {
             'model_name': 'KMeans',
@@ -328,6 +328,7 @@ class ClusteringTrainer:
         logger.info(f"Saved model to {model_path}")
         
         # Save metadata (metrics and cluster names)
+        # FIXED: Ensure keys are strings for JSON serialization
         metadata = {
             'metrics': metrics,
             'cluster_names': {str(k): v for k, v in cluster_names.items()}
@@ -424,4 +425,3 @@ if __name__ == "__main__":
         results['cluster_names']
     )
     print(f"\nModel saved to: {model_path}")
-
