@@ -14,6 +14,7 @@ import numpy as np
 import os
 import joblib  # Added for saving/loading models
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 # --- IMPORT YOUR ML MODULES ---
 try:
@@ -44,8 +45,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount frontend static files
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# Mount frontend static files on a subpath to avoid shadowing API routes
+app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+
+# Redirect root to the frontend index for convenience
+@app.get("/")
+async def _root_redirect():
+    return RedirectResponse(url="/frontend")
 
 # ==========================================
 # 1. PYDANTIC SCHEMAS
