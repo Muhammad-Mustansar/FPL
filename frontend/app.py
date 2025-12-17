@@ -36,6 +36,7 @@ st.set_page_config(
 # CONFIG / CONSTANTS
 # ---------------------------------------------------------------------------
 
+# Default to localhost for development, use environment variable for production
 API_BASE_URL = os.getenv("FPL_API_BASE_URL", "http://localhost:8000")
 
 

@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 import os
 import joblib  # Added for saving/loading models
+from fastapi.staticfiles import StaticFiles
 
 # --- IMPORT YOUR ML MODULES ---
 try:
@@ -28,6 +29,23 @@ except ImportError as e:
 # Configure logging
 logger.remove()
 logger.add(sys.stdout, level="INFO", format="{time} | {level} | {message}")
+
+# ==========================================
+# 0. INITIALIZE FASTAPI APP
+# ==========================================
+app = FastAPI(title="FPL Manager API", version="1.0.0")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount frontend static files
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 # ==========================================
 # 1. PYDANTIC SCHEMAS
@@ -197,14 +215,7 @@ ml_service = MLService()
 # 3. FASTAPI APP & ROUTES
 # ==========================================
 
-app = FastAPI(title="FPL Manager Agent API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# App is already initialized above with mount and middleware configured
 
 @app.on_event("startup")
 async def startup_event():
