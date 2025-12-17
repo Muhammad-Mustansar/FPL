@@ -1,11 +1,14 @@
 version: '3.8'
 
 services:
-  fastapi:
+  # 1. The Brain (FastAPI Backend)
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fpl-manager-api
+    container_name: fpl-backend
+    # UPDATED: Points to 'app.main' instead of just 'main'
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     volumes:
@@ -14,53 +17,33 @@ services:
       - ./logs:/app/logs
     environment:
       - PYTHONUNBUFFERED=1
-      - ENVIRONMENT=production
-    restart: unless-stopped
+    networks:
+      - fpl-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - fpl-network
 
-  prefect:
+  # 2. The Face (Streamlit Frontend)
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fpl-prefect-worker
-    command: python -c "from prefect.flow import ml_pipeline_flow; ml_pipeline_flow()"
-    volumes:
-      - ./data:/app/data
-      - ./models:/app/models
-      - ./logs:/app/logs
+    container_name: fpl-frontend
+    # UPDATED: Points to 'frontend/app.py' instead of 'app.py'
+    command: streamlit run frontend/app.py
+    ports:
+      - "8501:8501"
     environment:
-      - PYTHONUNBUFFERED=1
-      - PREFECT_API_URL=http://localhost:4200/api
+      # Connects frontend to the backend container
+      - FPL_API_BASE_URL=http://backend:8000
     depends_on:
-      - fastapi
-    restart: unless-stopped
+      - backend
     networks:
       - fpl-network
-
-  # Optional: Prefect Server (for workflow monitoring)
-  # prefect-server:
-  #   image: prefecthq/prefect:latest
-  #   container_name: fpl-prefect-server
-  #   ports:
-  #     - "4200:4200"
-  #   environment:
-  #     - PREFECT_API_URL=http://localhost:4200/api
-  #   networks:
-  #     - fpl-network
 
 networks:
   fpl-network:
     driver: bridge
-
-volumes:
-  data:
-  models:
-  logs:
-
